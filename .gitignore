@@ -1,0 +1,7 @@
+.reference-files
+.venv
+env
+logs/
+__pycache__
+strategies/__pycache__
+launch-agents/
