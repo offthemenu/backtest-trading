@@ -18,7 +18,7 @@ import pandas as pd
 import streamlit as st
 
 st.sidebar.title("Backtest Settings")
-ticker = st.sidebar.selectbox("Select Ticker:", WATCHLIST_BACKTEST_SELECTION)
+ticker = st.sidebar.text_input("Select Ticker:","QQQM")
 start_date = st.sidebar.date_input("Start Date", value=pd.to_datetime(one_year_ago))
 end_date = st.sidebar.date_input("End Date", value=pd.to_datetime(today))
 
@@ -30,4 +30,4 @@ signal_df = generate_signals(df)
 trade_log = simulate_trades(signal_df, ticker, initial_cash)
 
 # Plot
-plot_backtest(signal_df, trade_log)
+plot_backtest(ticker, signal_df, trade_log, start_date, end_date)

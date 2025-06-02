@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from config.settings import WATCHLIST
+from config.settings import WATCHLIST_BACKTEST_SELECTION
 
 def compute_indicators(df: pd.DataFrame) -> pd.DataFrame:
     """

@@ -2,11 +2,13 @@ import pandas as pd
 import plotly.graph_objs as go
 import streamlit as st
 
-def plot_backtest(df: pd.DataFrame, trade_log: pd.DataFrame):
+def plot_backtest(ticker: str, df: pd.DataFrame, trade_log: pd.DataFrame, start_date: str, end_date: str):
     """
     Plot the backtest result using Plotly — Price, EMA, RSI, Trades
     """
-    st.title("Equity Trading Backtest Visualization")
+    st.title(f"Equity Trading Backtest Visualization")
+    
+    st.subheader(f"*{ticker}* Trade Data Between *{start_date}* and *{end_date}*")
 
     # Price + EMA Chart
     fig_price = go.Figure()

@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 from pandas_datareader import data as pdr
 from pathlib import Path
-from config.settings import WATCHLIST
+from config.settings import WATCHLIST_BACKTEST_SELECTION
 
 CACHE_DIR = Path(__file__).parent.parent / "data" / "cache"
 
