@@ -1,22 +1,44 @@
 from datetime import datetime
 
 #========== Setup ==========
-#----------- Primary Watchlist -----------
-WATCHLIST = ['QQQM', 'IAU', 'XLV', 'VOO']
-#----------- Secondary Watchlist -----------
+
 WATCHLIST_BACKTEST_SELECTION = [
-    "QQQM",  # US Tech - Nasdaq 100
-    "VOO",   # US Broad Market - S&P 500
-    "IAU",   # Gold / Inflation hedge
-    "BOTZ",  # Robotics / Innovation
-    "VWO",   # Emerging Markets ETF
-    "XLU",   # Utilities - Defensive sector
-    "XLP",   # Consumer Staples - Defensive sector
-    "XLV",   # Healthcare - Defensive growth
-    "VGK",   # Europe ex-UK ETF
-    "EWJ",   # Japan ETF
-    "IJH",   # US MidCap - S&P MidCap 400
-    "IEF",   # 7–10yr Treasury Bonds ETF
+    # Tech giants
+    "AAPL", "MSFT", "NVDA", "META", "GOOGL", "AMZN", "TSLA",
+
+    # Semiconductor / AI
+    "AMD", "INTC", "MU", "AVGO", "SMCI",
+
+    # Financials
+    "JPM", "BAC", "WFC", "GS", "C",
+
+    # Healthcare
+    "PFE", "MRNA", "JNJ", "UNH",
+
+    # Energy
+    "XOM", "CVX", "SLB",
+
+    # Consumer Discretionary
+    "NKE", "MCD", "SBUX", "HD", "COST", "DIS", "AMZN", "TSLA",
+
+    # ETFs
+    "SPY",   # S&P 500 ETF
+    "QQQ",   # NASDAQ-100 ETF
+    "IWM",   # Russell 2000 ETF
+    "DIA",   # Dow Jones ETF
+    "UVXY",  # Volatility ETF (VIX Short-Term Futures)
+
+    # Biotech & Speculative
+    "BNTX", "RIVN", "LCID", "PLTR", "ROKU", "PYPL",
+
+    # Small-Mid Cap momentum stocks
+    "UPST", "SOFI", "AFRM", "AI", "DKNG", "FUBO", "TSM", "FSLR",
+
+    # Meme stocks / Volatile plays
+    "GME", "AMC", "BBBY", "CVNA",
+
+    # Industrials
+    "BA", "GE"
 ]
 
 #----------- Position Sizing -----------
