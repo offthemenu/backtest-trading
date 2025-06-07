@@ -8,3 +8,14 @@ launch-agents/
 기술서.md
 기술서.html
 ignored/
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# System
+.DS_Store
