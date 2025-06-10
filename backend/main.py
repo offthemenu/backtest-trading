@@ -92,7 +92,11 @@ def load_data(
     cache_key = f"{ticker}_{country}_{interval}_{from_date}_{to_date}"
     if cache_key in cache:
         return cache[cache_key]
+    # Initialize df_stocks and fall back to various search options based on asset class
+    df_stocks = None
+    error_messages = []
 
+    # Stock Search
     try:
         df_stocks = investpy.stocks.get_stock_historical_data(
             stock=ticker,
@@ -104,10 +108,41 @@ def load_data(
             interval=interval.lower()
         )
     except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Data not found for {ticker} ({country}): {str(e)}")
+        error_messages.append(f"Stock: {str(e)}")
 
-    if df_stocks.empty:
-        raise HTTPException(status_code=404, detail=f"No data available for {ticker} in {country}.")
+    # Fund Search
+    try:
+        df_stocks = investpy.funds.get_fund_historical_data(
+            fund=ticker,
+            country=country.lower(),
+            from_date=from_obj.strftime('%d/%m/%Y'),
+            to_date=to_obj.strftime('%d/%m/%Y'),
+            as_json=False,
+            order='ascending', 
+            interval=interval.lower()
+        )
+    except Exception as e:
+        error_messages.append(f"Fund: {str(e)}")
+
+    # ETF Search
+    try:
+        df_stocks = investpy.etfs.get_etf_historical_data(
+            etf=ticker,
+            country=country.lower(),
+            from_date=from_obj.strftime('%d/%m/%Y'),
+            to_date=to_obj.strftime('%d/%m/%Y'),
+            as_json=False,
+            order='ascending', 
+            interval=interval.lower()
+        )
+    except Exception as e:
+        error_messages.append(f"ETF: {str(e)}")
+
+    if df_stocks is None or df_stocks.empty:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Data not found for {ticker} ({country}). Errors: {' | '.join(error_messages)}"
+        )
 
     df_stocks.reset_index(inplace=True)
 
