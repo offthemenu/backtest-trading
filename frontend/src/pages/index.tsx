@@ -54,6 +54,7 @@ export default function Home() {
               <option value="AAPL">AAPL</option>
               <option value="GOOG">GOOG</option>
               <option value="MSFT">MSFT</option>
+              <option value="QQQM">QQQM</option>
             </select>
           </div>
         </aside>
