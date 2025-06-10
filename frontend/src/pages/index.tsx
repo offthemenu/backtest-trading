@@ -76,6 +76,18 @@ export default function Home() {
         <aside className="w-1/4 bg-gray-200 p-4">
           <h2 className="text-xl font-bold mb-4">Chart Settings</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Country */}
+            <div>
+              <label htmlFor="country" className="block text-sm font-medium mb-1">Country</label>
+              <Select
+                id="country"
+                options={countryOptions}
+                value={countryOptions.find(option => option.value === country)}
+                onChange={(selected) => setCountry(selected?.value || '')}
+                className="text-sm"
+              />
+            </div>
+
             {/* Ticker */}
             <div>
               <label htmlFor="ticker" className="block text-sm font-medium mb-1">Ticker</label>
@@ -88,18 +100,6 @@ export default function Home() {
                 placeholder="Enter ticker (e.g. TSLA)"
                 autoComplete="off"
                 />
-            </div>
-
-            {/* Country */}
-            <div>
-              <label htmlFor="country" className="block text-sm font-medium mb-1">Country</label>
-              <Select
-                id="country"
-                options={countryOptions}
-                value={countryOptions.find(option => option.value === country)}
-                onChange={(selected) => setCountry(selected?.value || '')}
-                className="text-sm"
-              />
             </div>
 
             {/* From Date */}
