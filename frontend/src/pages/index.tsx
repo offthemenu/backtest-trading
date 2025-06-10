@@ -1,20 +1,36 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import CandlestickChart from '../components/CandlestickChart';
+
 export default function Home() {
+  const [candles, setCandles] = useState([]);
+  const [ticker, setTicker] = useState('TSLA');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCandles = async () => {
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/v01/load_data?ticker=${ticker}&from=2022-01-01`);
+        const data = await response.json();
+        setCandles(data.candles);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+
+    fetchCandles();
+  }, [ticker]);
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <div className="flex flex-1">
-        <aside className="w-1/4 bg-gray-200 p-4">
-          <h2 className="text-xl font-bold mb-4">Settings</h2>
-          {/* Future: Ticker Info + RSI/EMA Settings */}
-        </aside>
-        <main className="flex-1 p-4 bg-white">
-          <h2 className="text-xl font-bold mb-4">Chart Area</h2>
-          {/* Future: Plotly.js Charts */}
-        </main>
-      </div>
-      <footer className="bg-gray-100 p-4">
-        <h2 className="text-xl font-bold mb-2">Trade Log</h2>
-        {/* Future: Trade Log Table */}
-      </footer>
-    </div>
+    <main className="flex flex-col items-center justify-center min-h-screen p-4">
+      {loading ? (
+        <div>Loading...</div>
+      ) : (
+        <CandlestickChart candles={candles} ticker={ticker} />
+      )}
+    </main>
   );
 }
+
