@@ -198,40 +198,70 @@ def load_data(
     if cache_key in cache:
         return cache[cache_key]
     
-    if asset_type.lower() == "stocks":
-        # Stock Search
-        try:
-            df_stocks = investpy.stocks.get_stock_historical_data(
+    df = None
+    try:
+        if asset_type == "stocks":
+            df = investpy.stocks.get_stock_historical_data(
                 stock=ticker,
                 country=country.lower(),
                 from_date=from_obj.strftime('%d/%m/%Y'),
                 to_date=to_obj.strftime('%d/%m/%Y'),
                 as_json=False,
-                order='ascending', 
+                order='ascending',
                 interval=interval.lower()
             )
-        except Exception as e:
-            raise HTTPException(status_code=404, detail=f"Failed to retrieve stock data for {ticker}: {e}")
-
-        if df_stocks.empty:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Data not found for {ticker} ({country})."
+        elif asset_type == "funds":
+            df = investpy.funds.get_fund_historical_data(
+                fund=ticker,
+                country=country.lower(),
+                from_date=from_obj.strftime('%d/%m/%Y'),
+                to_date=to_obj.strftime('%d/%m/%Y'),
+                as_json=False,
+                order='ascending'
             )
+        elif asset_type == "etfs":
+            df = investpy.etfs.get_etf_historical_data(
+                etf=ticker,
+                country=country.lower(),
+                from_date=from_obj.strftime('%d/%m/%Y'),
+                to_date=to_obj.strftime('%d/%m/%Y'),
+                as_json=False,
+                order='ascending',
+                interval=interval.lower()
+            )
+        elif asset_type == "cryptocurrency":
+            df = investpy.crypto.get_crypto_historical_data(
+                crypto=ticker,
+                from_date=from_obj.strftime('%d/%m/%Y'),
+                to_date=to_obj.strftime('%d/%m/%Y'),
+                as_json=False,
+                order='ascending',
+                interval=interval.lower()
+            )
+        else:
+            raise HTTPException(status_code=400, detail=f"Unsupported asset type: {asset_type}")
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=f"Failed to retrieve stock data for {ticker}: {e}")
 
-        df_stocks.reset_index(inplace=True)
+    if df.empty:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Data not found for {ticker} ({country})."
+        )
 
-        candles = []
-        for _, row in df_stocks.iterrows():
-            date_str = row['Date'].strftime('%Y-%m-%d')
-            candles.append({
-                "date": date_str,
-                "open": round(float(row['Open']), 2),
-                "high": round(float(row['High']), 2),
-                "low": round(float(row['Low']), 2),
-                "close": round(float(row['Close']), 2),
-                "currency": row.get('Currency', 'USD')  # fallback if missing
-            })
+    df.reset_index(inplace=True)
+
+    candles = []
+    for _, row in df.iterrows():
+        date_str = row['Date'].strftime('%Y-%m-%d')
+        candles.append({
+            "date": date_str,
+            "open": round(float(row['Open']), 2),
+            "high": round(float(row['High']), 2),
+            "low": round(float(row['Low']), 2),
+            "close": round(float(row['Close']), 2),
+            "currency": row.get('Currency', 'USD')  # fallback if missing
+        })
 
     result = {
         "ticker": ticker.upper(),
