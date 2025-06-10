@@ -148,6 +148,7 @@ def get_cryptos():
 
 @app.get('/v01/load_data')
 def load_data(
+    asset_type: str = Query(..., alias= "type"),
     ticker: str = Query(...),
     country: str = Query(...),
     from_date: str = Query(..., alias="from"),
@@ -216,43 +217,41 @@ def load_data(
     cache_key = f"{ticker}_{country}_{interval}_{from_date}_{to_date}"
     if cache_key in cache:
         return cache[cache_key]
-    # Initialize df_stocks and fall back to various search options based on asset class
-    df_stocks = None
-    error_messages = []
+    
+    if asset_type.lower() == "stocks":
+        # Stock Search
+        try:
+            df_stocks = investpy.stocks.get_stock_historical_data(
+                stock=ticker,
+                country=country.lower(),
+                from_date=from_obj.strftime('%d/%m/%Y'),
+                to_date=to_obj.strftime('%d/%m/%Y'),
+                as_json=False,
+                order='ascending', 
+                interval=interval.lower()
+            )
+        except Exception as e:
+            raise HTTPException(status_code=404, detail=f"Failed to retrieve stock data for {ticker}: {e}")
 
-    # Stock Search
-    try:
-        df_stocks = investpy.stocks.get_stock_historical_data(
-            stock=ticker,
-            country=country.lower(),
-            from_date=from_obj.strftime('%d/%m/%Y'),
-            to_date=to_obj.strftime('%d/%m/%Y'),
-            as_json=False,
-            order='ascending', 
-            interval=interval.lower()
-        )
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=f"Failed to retrieve stock data for {ticker}: {e}")
+        if df_stocks.empty:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Data not found for {ticker} ({country})."
+            )
 
-    if df_stocks.empty:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Data not found for {ticker} ({country}). Errors: {' | '.join(error_messages)}"
-        )
+        df_stocks.reset_index(inplace=True)
 
-    df_stocks.reset_index(inplace=True)
-
-    candles = []
-    for _, row in df_stocks.iterrows():
-        date_str = row['Date'].strftime('%Y-%m-%d')
-        candles.append({
-            "date": date_str,
-            "open": round(float(row['Open']), 2),
-            "high": round(float(row['High']), 2),
-            "low": round(float(row['Low']), 2),
-            "close": round(float(row['Close']), 2),
-            "currency": row.get('Currency', 'USD')  # fallback if missing
-        })
+        candles = []
+        for _, row in df_stocks.iterrows():
+            date_str = row['Date'].strftime('%Y-%m-%d')
+            candles.append({
+                "date": date_str,
+                "open": round(float(row['Open']), 2),
+                "high": round(float(row['High']), 2),
+                "low": round(float(row['Low']), 2),
+                "close": round(float(row['Close']), 2),
+                "currency": row.get('Currency', 'USD')  # fallback if missing
+            })
 
     result = {
         "ticker": ticker.upper(),
