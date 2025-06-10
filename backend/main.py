@@ -156,26 +156,6 @@ def load_data(
     interval: str = Query(..., alias="interval")
 ):  
     '''
-    Intended Output of the GET Call
-        {
-        "ticker": "TSLA",
-        "from": "2023-01-01",
-        "candles": [
-            {
-            "date": "2023-01-01",
-            "open": 96.41,
-            "high": 97.72,
-            "low": 91.62,
-            "close": 94.3
-            },
-            {
-            "date": "2023-01-02",
-            "open": 101.15,
-            "high": 105.22,
-            "low": 98.89,
-            "close": 102.42
-            },
-
     List of available countries using investpy (alphabetical order)
     [
         'argentina', 'australia', 'austria', 
