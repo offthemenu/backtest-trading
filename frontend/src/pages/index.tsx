@@ -10,19 +10,19 @@ const CandlestickChart = dynamic(() => import('../components/CandlestickChart'),
 
 // Country options list
 const countryOptions = [
-  'argentina', 'australia', 'austria', 'bahrain', 'bangladesh', 'belgium', 'bosnia', 'botswana',
-  'brazil', 'bulgaria', 'canada', 'chile', 'china', 'colombia', 'costa rica', 'croatia', 'cyprus',
-  'czech republic', 'denmark', 'dubai', 'egypt', 'finland', 'france', 'germany', 'greece',
-  'hong kong', 'hungary', 'iceland', 'india', 'indonesia', 'iraq', 'ireland', 'israel', 'italy',
-  'ivory coast', 'jamaica', 'japan', 'jordan', 'kazakhstan', 'kenya', 'kuwait', 'lebanon',
-  'luxembourg', 'malawi', 'malaysia', 'malta', 'mauritius', 'mexico', 'mongolia', 'montenegro',
-  'morocco', 'namibia', 'netherlands', 'new zealand', 'nigeria', 'norway', 'oman', 'pakistan',
-  'palestine', 'peru', 'philippines', 'poland', 'portugal', 'qatar', 'romania', 'russia', 'rwanda',
-  'saudi arabia', 'serbia', 'singapore', 'slovakia', 'slovenia', 'south africa', 'south korea',
-  'spain', 'sri lanka', 'sweden', 'switzerland', 'taiwan', 'tanzania', 'thailand', 'tunisia',
-  'turkey', 'uganda', 'ukraine', 'united kingdom', 'united states', 'uruguay', 'venezuela',
-  'vietnam', 'zambia', 'zimbabwe',
-].map((c) => ({ label: c.charAt(0).toUpperCase() + c.slice(1), value: c }));
+  'Argentina', 'Australia', 'Austria', 'Bahrain', 'Bangladesh', 'Belgium', 'Bosnia', 'Botswana',
+  'Brazil', 'Bulgaria', 'Canada', 'Chile', 'China', 'Colombia', 'Costa Rica', 'Croatia', 'Cyprus',
+  'Czech Republic', 'Denmark', 'Dubai', 'Egypt', 'Finland', 'France', 'Germany', 'Greece',
+  'Hong Kong', 'Hungary', 'Iceland', 'India', 'Indonesia', 'Iraq', 'Ireland', 'Israel', 'Italy',
+  'Ivory Coast', 'Jamaica', 'Japan', 'Jordan', 'Kazakhstan', 'Kenya', 'Kuwait', 'Lebanon',
+  'Luxembourg', 'Malawi', 'Malaysia', 'Malta', 'Mauritius', 'Mexico', 'Mongolia', 'Montenegro',
+  'Morocco', 'Namibia', 'Netherlands', 'New Zealand', 'Nigeria', 'Norway', 'Oman', 'Pakistan',
+  'Palestine', 'Peru', 'Philippines', 'Poland', 'Portugal', 'Qatar', 'Romania', 'Russia', 'Rwanda',
+  'Saudi Arabia', 'Serbia', 'Singapore', 'Slovakia', 'Slovenia', 'South Africa', 'South Korea',
+  'Spain', 'Sri Lanka', 'Sweden', 'Switzerland', 'Taiwan', 'Tanzania', 'Thailand', 'Tunisia',
+  'Turkey', 'Uganda', 'Ukraine', 'United Kingdom', 'United States', 'Uruguay', 'Venezuela',
+  'Vietnam', 'Zambia', 'Zimbabwe',
+].map((c) => ({ label: c, value: c.toLowerCase() }));
 
 // Asset Class List
 const assetOptions = [
@@ -34,11 +34,16 @@ const assetOptions = [
 
 export default function Home() {
   const [candles, setCandles] = useState([]);
-  const [ticker, setTicker] = useState('TSLA');
-  const [assetType, setAssetType] = useState('TSLA');
+  const [ticker, setTicker] = useState('');
+  const [availableTickers, setAvailableTickers] = useState([]);
+  const [assetType, setAssetType] = useState('stocks');
   const [country, setCountry] = useState('united states');
-  const [from, setFrom] = useState('2023-01-01');
-  const [to, setTo] = useState('2023-12-31');
+  const [from, setFrom] = useState(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 1);
+    return d.toISOString().slice(0, 10);
+  });
+  const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
   const [interval, setInterval] = useState('daily');
   const [loading, setLoading] = useState(false);
 
@@ -52,7 +57,6 @@ export default function Home() {
         to,
         interval,
       });
-
       const response = await fetch(`http://127.0.0.1:8000/v01/load_data?${params.toString()}`);
       const data = await response.json();
       if (response.ok) {
@@ -69,9 +73,42 @@ export default function Home() {
     }
   };
 
+  // Fetch tickers on assetType or country change
   useEffect(() => {
-    fetchCandles(); // initial load
-  }, []);
+    const fetchTickers = async () => {
+      if (!assetType) return;
+      let endpoint = '';
+      switch (assetType) {
+        case 'stocks': endpoint = 'get_stocks'; break;
+        case 'funds': endpoint = 'get_funds'; break;
+        case 'etfs': endpoint = 'get_etfs'; break;
+        case 'cryptocurrency': endpoint = 'get_cryptos'; break;
+      }
+
+      const url =
+        assetType === 'cryptocurrency'
+          ? `http://127.0.0.1:8000/v01/${endpoint}`
+          : `http://127.0.0.1:8000/v01/${endpoint}?country=${encodeURIComponent(country)}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const list = data.available_stocks || data.available_funds || data.available_etfs || data.available_cryptos || [];
+        setAvailableTickers(list);
+        if (list.length > 0) setTicker(list[0].ticker);
+        else setTicker('');
+      } catch (err) {
+        console.error(err);
+        setAvailableTickers([]);
+      }
+    };
+
+    fetchTickers();
+  }, [assetType, country]);
+
+  useEffect(() => {
+    fetchCandles();
+  }, [ticker]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,6 +122,16 @@ export default function Home() {
         <aside className="w-1/4 bg-gray-200 p-4">
           <h2 className="text-xl font-bold mb-4">Chart Settings</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Asset Type */}
+            <div>
+              <label className="block text-sm font-medium mb-1">Asset Type</label>
+              <Select
+                options={assetOptions}
+                value={assetOptions.find((opt) => opt.value === assetType)}
+                onChange={(sel) => setAssetType(sel?.value || '')}
+              />
+            </div>
+
             {/* Country */}
             <div>
               <label htmlFor="country" className="block text-sm font-medium mb-1">Country</label>
@@ -97,30 +144,20 @@ export default function Home() {
               />
             </div>
 
-            {/* Asset Class */}
-            <div>
-              <label htmlFor="assetType" className="block text-sm font-medium mb-1">Asset Type</label>
-              <Select
-                id="assetType"
-                options={assetOptions}
-                value={assetOptions.find(option => option.value === assetType)}
-                onChange={(selected) => setCountry(selected?.value || '')}
-                className="text-sm"
-              />
-            </div>
-
             {/* Ticker */}
             <div>
-              <label htmlFor="ticker" className="block text-sm font-medium mb-1">Ticker</label>
-                <input
-                type="text"
-                id="ticker"
+              <label className="block text-sm font-medium mb-1">Ticker</label>
+              <select
                 value={ticker}
-                onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                onChange={(e) => setTicker(e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded"
-                placeholder="Enter ticker (e.g. TSLA)"
-                autoComplete="off"
-                />
+              >
+                {availableTickers.map(({ stock, ticker }) => (
+                  <option key={ticker} value={ticker}>
+                    {stock} ({ticker})
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* From Date */}
