@@ -214,7 +214,7 @@ def load_data(
         raise HTTPException(status_code=400, detail="`from` date must be earlier than `to` date.")
 
     # Construct cache key
-    cache_key = f"{ticker}_{country}_{interval}_{from_date}_{to_date}"
+    cache_key = f"{ticker}_{asset_type}_{country}_{interval}_{from_date}_{to_date}"
     if cache_key in cache:
         return cache[cache_key]
     

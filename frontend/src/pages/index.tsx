@@ -51,6 +51,7 @@ export default function Home() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
+        assetType,
         ticker,
         country,
         from,
