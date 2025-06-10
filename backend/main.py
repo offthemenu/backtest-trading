@@ -140,6 +140,7 @@ def get_cryptos():
         })
 
     result = {
+        "country": None,
         "available_cryptos": coins
     }
 
