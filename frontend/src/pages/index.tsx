@@ -24,9 +24,18 @@ const countryOptions = [
   'vietnam', 'zambia', 'zimbabwe',
 ].map((c) => ({ label: c.charAt(0).toUpperCase() + c.slice(1), value: c }));
 
+// Asset Class List
+const assetOptions = [
+  'stocks',
+  'funds',
+  'ETFs',
+  'Cryptocurrency'
+].map((c) => ({ label: c.charAt(0).toUpperCase() + c.slice(1), value: c }));
+
 export default function Home() {
   const [candles, setCandles] = useState([]);
   const [ticker, setTicker] = useState('TSLA');
+  const [assetType, setAssetType] = useState('TSLA');
   const [country, setCountry] = useState('united states');
   const [from, setFrom] = useState('2023-01-01');
   const [to, setTo] = useState('2023-12-31');
@@ -83,6 +92,18 @@ export default function Home() {
                 id="country"
                 options={countryOptions}
                 value={countryOptions.find(option => option.value === country)}
+                onChange={(selected) => setCountry(selected?.value || '')}
+                className="text-sm"
+              />
+            </div>
+
+            {/* Asset Class */}
+            <div>
+              <label htmlFor="assetType" className="block text-sm font-medium mb-1">Asset Type</label>
+              <Select
+                id="assetType"
+                options={assetOptions}
+                value={assetOptions.find(option => option.value === assetType)}
                 onChange={(selected) => setCountry(selected?.value || '')}
                 className="text-sm"
               />
