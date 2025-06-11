@@ -1,29 +1,21 @@
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi import Query, HTTPException, FastAPI
+from fastapi import Query, HTTPException, FastAPI, APIRouter
 from datetime import datetime, timedelta
 from typing import List
 import random
 import investpy
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # during development only; restrict in prod
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+router = APIRouter(prefix="/v01")
 
 # basic in-memory cache
 cache: dict[str, dict] = {}
 
-@app.get('/v01/ping')
+@router.get('/ping')
 async def ping():
     return {'message': "pong"}
 
 # Country Stock Retrieval
-@app.get('/v01/get_stocks')
+@router.get('/get_stocks')
 def get_stocks(
     country: str = Query(...)
 ):
@@ -46,6 +38,8 @@ def get_stocks(
             "ticker": ticker,
             "stock": stock
         })
+    
+    stocks.sort(key=lambda x: x["stock"].lower())
 
     result = {
         "country": country,
@@ -55,7 +49,7 @@ def get_stocks(
     return result
 
 # Country Fund Retrieval
-@app.get('/v01/get_funds')
+@router.get('/get_funds')
 def get_funds(
     country: str = Query(...)
 ):
@@ -78,7 +72,8 @@ def get_funds(
             "ticker": ticker,
             "stock": stock
         })
-
+    
+    funds.sort(key=lambda x: x["stock"].lower())
     result = {
         "country": country,
         "available_funds": funds
@@ -87,7 +82,7 @@ def get_funds(
     return result
 
 # Country ETF Retrieval
-@app.get('/v01/get_etfs')
+@router.get('/get_etfs')
 def get_etfs(
     country: str = Query(...)
 ):
@@ -111,6 +106,7 @@ def get_etfs(
             "stock": stock
         })
 
+    etfs.sort(key=lambda x: x["stock"].lower())
     result = {
         "country": country,
         "available_etfs": etfs
@@ -119,7 +115,7 @@ def get_etfs(
     return result
 
 # Country Crypto Retrieval
-@app.get('/v01/get_cryptos')
+@router.get('/get_cryptos')
 def get_cryptos():
     '''
     Get all available coins investpy and return an object of all available coins
@@ -139,6 +135,7 @@ def get_cryptos():
             "stock": stock
         })
 
+    coins.sort(key=lambda x: x["stock"].lower())
     result = {
         "country": None,
         "available_cryptos": coins
@@ -146,7 +143,7 @@ def get_cryptos():
 
     return result
 
-@app.get('/v01/load_data')
+@router.get('/load_data')
 def load_data(
     asset_type: str = Query(..., alias= "type"),
     ticker: str = Query(...),
