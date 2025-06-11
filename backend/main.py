@@ -43,8 +43,8 @@ def get_stocks(
         ticker = row["symbol"]
 
         stocks.append({
-            "stock": stock,
-            "ticker": ticker
+            "ticker": ticker,
+            "stock": stock
         })
 
     result = {
@@ -75,8 +75,8 @@ def get_funds(
         ticker = row["symbol"]
 
         funds.append({
-            "stock": stock,
-            "ticker": ticker
+            "ticker": ticker,
+            "stock": stock
         })
 
     result = {
@@ -107,8 +107,8 @@ def get_etfs(
         ticker = row["symbol"]
 
         etfs.append({
-            "stock": stock,
-            "ticker": ticker
+            "ticker": ticker,
+            "stock": stock
         })
 
     result = {
@@ -135,8 +135,8 @@ def get_cryptos():
         ticker = row["symbol"]
 
         coins.append({
-            "stock": stock,
-            "ticker": ticker
+            "ticker": ticker,
+            "stock": stock
         })
 
     result = {
@@ -211,8 +211,19 @@ def load_data(
                 interval=interval.lower()
             )
         elif asset_type == "funds":
+            # Find Fund name from the ticker using get_funds
+            available_funds = get_funds(country=country)["available_funds"]
+            fund_name = None
+
+            for fund in available_funds:
+                if fund["ticker"] == ticker:
+                    fund_name = fund["stock"]
+                    break
+                if not fund_name:
+                    raise HTTPException(status_code=404, detail= f"Fund with ticker {ticker} not found in {country}.")
+                
             df = investpy.funds.get_fund_historical_data(
-                fund=ticker,
+                fund=fund_name,
                 country=country.lower(),
                 from_date=from_obj.strftime('%d/%m/%Y'),
                 to_date=to_obj.strftime('%d/%m/%Y'),
@@ -220,8 +231,18 @@ def load_data(
                 order='ascending'
             )
         elif asset_type == "etfs":
+            # Find the ETF name from the ticker using get_etfs
+            available_etfs = get_etfs(country=country)["available_etfs"]
+            etf_name = None
+            for etf in available_etfs:
+                if etf["ticker"].lower() == ticker.lower():
+                    etf_name = etf["stock"]
+                    break
+            if not etf_name:
+                raise HTTPException(status_code=404, detail=f"ETF with ticker {ticker} not found in {country}.")
+            
             df = investpy.etfs.get_etf_historical_data(
-                etf=ticker,
+                etf=etf_name,
                 country=country.lower(),
                 from_date=from_obj.strftime('%d/%m/%Y'),
                 to_date=to_obj.strftime('%d/%m/%Y'),
@@ -229,9 +250,21 @@ def load_data(
                 order='ascending',
                 interval=interval.lower()
             )
+
         elif asset_type == "cryptocurrency":
+            # Find the Crypto name from the ticker using get_crypto
+            available_cryptos = get_cryptos()["available_cryptos"]
+            crypto_name = None
+
+            for crypto in available_cryptos:
+                if crypto["ticker"].lower() == ticker.lower():
+                    crypto_name = crypto["stock"]
+                    break
+            if not crypto_name:
+                raise HTTPException(status_code=404, detail=f"Crypto with ticker {ticker} not found in {country}.")
+
             df = investpy.crypto.get_crypto_historical_data(
-                crypto=ticker,
+                crypto=crypto_name,
                 from_date=from_obj.strftime('%d/%m/%Y'),
                 to_date=to_obj.strftime('%d/%m/%Y'),
                 as_json=False,
@@ -281,6 +314,9 @@ samsung = '005930'
 samsung_historic = investpy.stocks.get_stock_historical_data(stock=samsung,country='south korea',from_date='01/01/2025',to_date='06/09/2025',as_json=False,order='descending',interval='Daily')
 available_countries = investpy.stocks.get_stock_countries()
 available_stocks = investpy.stocks.get_stocks(country='united states')
-available_funds = investpy.funds.get_funds(country='united states')
-available_crypto = investpy.crypto.get_cryptos()
-print(available_crypto)
+available_funds = get_funds(country='united states')
+available_crypto = get_cryptos()
+available_etfs = get_etfs(country='united states')
+# print(available_etfs["available_etfs"])
+# print(available_funds["available_funds"][:10])
+print(available_crypto["available_cryptos"][:10])
