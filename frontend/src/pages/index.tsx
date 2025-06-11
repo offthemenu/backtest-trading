@@ -26,17 +26,17 @@ const countryOptions = [
 
 // Asset Class List
 const assetOptions = [
-  'stocks',
-  'funds',
-  'ETFs',
-  'Cryptocurrency'
-].map((c) => ({ label: c.charAt(0).toUpperCase() + c.slice(1), value: c }));
+  { label: 'Stocks', value: 'stocks' },
+  { label: 'Funds', value: 'funds' },
+  { label: 'ETFs', value: 'etfs' },
+  { label: 'Cryptocurrency', value: 'cryptocurrency' },
+];
 
 export default function Home() {
   const [candles, setCandles] = useState([]);
   const [ticker, setTicker] = useState('');
   const [availableTickers, setAvailableTickers] = useState([]);
-  const [assetType, setAssetType] = useState('stocks');
+  const [type, setType] = useState('stocks');
   const [country, setCountry] = useState('united states');
   const [from, setFrom] = useState(() => {
     const d = new Date();
@@ -51,7 +51,7 @@ export default function Home() {
     setLoading(true);
     try {
       const params = new URLSearchParams({
-        assetType,
+        type,
         ticker,
         country,
         from,
@@ -77,9 +77,9 @@ export default function Home() {
   // Fetch tickers on assetType or country change
   useEffect(() => {
     const fetchTickers = async () => {
-      if (!assetType) return;
+      if (!type) return;
       let endpoint = '';
-      switch (assetType) {
+      switch (type) {
         case 'stocks': endpoint = 'get_stocks'; break;
         case 'funds': endpoint = 'get_funds'; break;
         case 'etfs': endpoint = 'get_etfs'; break;
@@ -87,7 +87,7 @@ export default function Home() {
       }
 
       const url =
-        assetType === 'cryptocurrency'
+        type === 'cryptocurrency'
           ? `http://127.0.0.1:8000/v01/${endpoint}`
           : `http://127.0.0.1:8000/v01/${endpoint}?country=${encodeURIComponent(country)}`;
 
@@ -105,7 +105,7 @@ export default function Home() {
     };
 
     fetchTickers();
-  }, [assetType, country]);
+  }, [type, country]);
 
   useEffect(() => {
     fetchCandles();
@@ -128,8 +128,8 @@ export default function Home() {
               <label className="block text-sm font-medium mb-1">Asset Type</label>
               <Select
                 options={assetOptions}
-                value={assetOptions.find((opt) => opt.value === assetType)}
-                onChange={(sel) => setAssetType(sel?.value || '')}
+                value={assetOptions.find((opt) => opt.value === type)}
+                onChange={(sel) => setType(sel?.value || '')}
               />
             </div>
 
