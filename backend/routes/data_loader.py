@@ -145,59 +145,40 @@ def get_cryptos():
 
 @router.get('/load_data')
 def load_data(
-    asset_type: str = Query(..., alias= "type"),
+    asset_type: str = Query(..., alias="type"),
     ticker: str = Query(...),
     country: str = Query(...),
     from_date: str = Query(..., alias="from"),
     to_date: str = Query(..., alias="to"),
     interval: str = Query(..., alias="interval")
 ):  
-    '''
-    List of available countries using investpy (alphabetical order)
-    [
-        'argentina', 'australia', 'austria', 
-        'bahrain', 'bangladesh', 'belgium', 'bosnia', 'botswana', 'brazil', 'bulgaria', 
-        'canada', 'chile', 'china', 'colombia', 'costa rica', 'croatia', 'cyprus', 'czech republic', 
-        'denmark', 'dubai', 
-        'egypt', 
-        'finland', 'france', 
-        'germany', 'greece', 
-        'hong kong', 'hungary', 
-        'iceland', 'india', 'indonesia', 'iraq', 'ireland', 'israel', 'italy', 'ivory coast', 
-        'jamaica', 'japan', 'jordan', 
-        'kazakhstan', 'kenya', 'kuwait', 
-        'lebanon', 'luxembourg', 
-        'malawi', 'malaysia', 'malta', 'mauritius', 'mexico', 'mongolia', 'montenegro', 'morocco', 
-        'namibia', 'netherlands', 'new zealand', 'nigeria', 'norway', 
-        'oman', 
-        'pakistan', 'palestine', 'peru', 'philippines', 'poland', 'portugal', 
-        'qatar', 
-        'romania', 'russia', 'rwanda', 
-        'saudi arabia', 'serbia', 'singapore', 'slovakia', 'slovenia', 'south africa', 'south korea', 'spain', 'sri lanka', 'sweden', 'switzerland', 
-        'taiwan', 'tanzania', 'thailand', 'tunisia', 'turkey', 
-        'uganda', 'ukraine', 'united kingdom', 'united states', 'uruguay', 
-        'venezuela', 'vietnam', 
-        'zambia', 'zimbabwe'
-    ]
-    '''
+    print(f"Received request: asset_type={asset_type}, ticker={ticker}, country={country}, from_date={from_date}, to_date={to_date}, interval={interval}")
+    
     # Validate date format
     try:
         from_obj = datetime.strptime(from_date, "%Y-%m-%d")
         to_obj = datetime.strptime(to_date, "%Y-%m-%d")
+        print(f"Parsed dates: from_obj={from_obj}, to_obj={to_obj}")
     except ValueError:
+        print("Invalid date format")
         raise HTTPException(status_code=400, detail="Invalid date format. Use YYYY-MM-DD.")
 
     if from_obj > to_obj:
+        print("`from` date is later than `to` date")
         raise HTTPException(status_code=400, detail="`from` date must be earlier than `to` date.")
 
     # Construct cache key
     cache_key = f"{ticker}_{asset_type}_{country}_{interval}_{from_date}_{to_date}"
+    print(f"Cache key: {cache_key}")
+    
     if cache_key in cache:
+        print("Returning data from cache")
         return cache[cache_key]
     
     df = None
     try:
         if asset_type == "stocks":
+            print("Retrieving stock data")
             df = investpy.stocks.get_stock_historical_data(
                 stock=ticker,
                 country=country.lower(),
@@ -208,7 +189,7 @@ def load_data(
                 interval=interval.lower()
             )
         elif asset_type == "funds":
-            # Find Fund name from the ticker using get_funds
+            print("Retrieving fund data")
             available_funds = get_funds(country=country)["available_funds"]
             fund_name = None
 
@@ -216,8 +197,9 @@ def load_data(
                 if fund["ticker"] == ticker:
                     fund_name = fund["stock"]
                     break
-                if not fund_name:
-                    raise HTTPException(status_code=404, detail= f"Fund with ticker {ticker} not found in {country}.")
+            if not fund_name:
+                print(f"Fund with ticker {ticker} not found")
+                raise HTTPException(status_code=404, detail=f"Fund with ticker {ticker} not found in {country}.")
                 
             df = investpy.funds.get_fund_historical_data(
                 fund=fund_name,
@@ -228,7 +210,7 @@ def load_data(
                 order='ascending'
             )
         elif asset_type == "etfs":
-            # Find the ETF name from the ticker using get_etfs
+            print("Retrieving ETF data")
             available_etfs = get_etfs(country=country)["available_etfs"]
             etf_name = None
             for etf in available_etfs:
@@ -236,6 +218,7 @@ def load_data(
                     etf_name = etf["stock"]
                     break
             if not etf_name:
+                print(f"ETF with ticker {ticker} not found")
                 raise HTTPException(status_code=404, detail=f"ETF with ticker {ticker} not found in {country}.")
             
             df = investpy.etfs.get_etf_historical_data(
@@ -247,9 +230,8 @@ def load_data(
                 order='ascending',
                 interval=interval.lower()
             )
-
         elif asset_type == "cryptocurrency":
-            # Find the Crypto name from the ticker using get_crypto
+            print("Retrieving cryptocurrency data")
             available_cryptos = get_cryptos()["available_cryptos"]
             crypto_name = None
 
@@ -258,6 +240,7 @@ def load_data(
                     crypto_name = crypto["stock"]
                     break
             if not crypto_name:
+                print(f"Crypto with ticker {ticker} not found")
                 raise HTTPException(status_code=404, detail=f"Crypto with ticker {ticker} not found in {country}.")
 
             df = investpy.crypto.get_crypto_historical_data(
@@ -269,11 +252,14 @@ def load_data(
                 interval=interval.lower()
             )
         else:
+            print(f"Unsupported asset type: {asset_type}")
             raise HTTPException(status_code=400, detail=f"Unsupported asset type: {asset_type}")
     except Exception as e:
+        print(f"Exception occurred: {e}")
         raise HTTPException(status_code=404, detail=f"Failed to retrieve stock data for {ticker}: {e}")
 
     if df.empty:
+        print("Data not found after retrieval")
         raise HTTPException(
             status_code=404,
             detail=f"Data not found for {ticker} ({country})."
@@ -300,6 +286,7 @@ def load_data(
     }
 
     cache[cache_key] = result  # optional, can disable during dev
+    print("Data retrieved and cached successfully")
     return result
 
 
