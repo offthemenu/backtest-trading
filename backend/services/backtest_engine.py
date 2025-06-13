@@ -28,5 +28,18 @@ def calculate_indicators(df: pd.DataFrame, ema_short: int, ema_long: int, rsi_pe
 
 def generate_trades(df: pd.DataFrame):
     trades = []
+    position = None
+
+    for i in range(1, len(df)):
+        prev = df.iloc[i - 1]
+        curr = df.iloc[i]
+
+        if prev['EMA_short'] < prev['EMA_long'] and curr['EMA_short'] > curr['EMA_long']:
+            trades.append({'type': 'buy', 'date': curr['Date'].strftime('%Y-%m-%d'), 'price': curr['Close']})
+            position = 'long'
+
+        elif prev['EMA_short'] > prev['EMA_long'] and curr['EMA_short'] < curr['EMA_long'] and position == 'long':
+            trades.append({'type': 'sell', 'date': curr['Date'].strftime('%Y-%m-%d'), 'price': curr['Close']})
+            position = None
 
     return trades
