@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from typing import List
 import random
 import investpy
+from investiny import historical_data
 
 router = APIRouter(prefix="/v01")
 
@@ -293,14 +294,4 @@ def load_data(
 # to run
 # uvicorn main:app --reload --port 8000
 
-# Test
-samsung = '005930'
-samsung_historic = investpy.stocks.get_stock_historical_data(stock=samsung,country='south korea',from_date='01/01/2025',to_date='06/09/2025',as_json=False,order='descending',interval='Daily')
-available_countries = investpy.stocks.get_stock_countries()
-available_stocks = investpy.stocks.get_stocks(country='united states')
-available_funds = get_funds(country='united states')
-available_crypto = get_cryptos()
-available_etfs = get_etfs(country='united states')
-# print(available_etfs["available_etfs"])
-# print(available_funds["available_funds"][:10])
-print(available_crypto["available_cryptos"][:10])
+
